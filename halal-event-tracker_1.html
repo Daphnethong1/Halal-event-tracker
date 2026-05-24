@@ -1,0 +1,974 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Halal Event Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=Playfair+Display:wght@600&display=swap" rel="stylesheet" />
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #F7F5F0;
+    --surface: #FFFFFF;
+    --surface2: #F0EDE7;
+    --border: #E2DDD5;
+    --border-strong: #C8C2B8;
+    --text: #1A1814;
+    --text-2: #6B6560;
+    --text-3: #A09994;
+    --accent: #C17D3C;
+    --accent-light: #F5EAD9;
+    --accent-dark: #8B5A28;
+    --green: #3D7A5E;
+    --green-light: #E2F0EA;
+    --red: #B84040;
+    --red-light: #FAE8E8;
+    --amber: #B07830;
+    --amber-light: #FBF0DC;
+    --blue: #2E6B9E;
+    --blue-light: #E3EEF8;
+    --purple: #6B5BA0;
+    --purple-light: #EDEAF8;
+    --teal: #2E8A7A;
+    --teal-light: #E2F2EF;
+    --pink: #A04870;
+    --pink-light: #F5E8EF;
+    --shadow: 0 2px 12px rgba(0,0,0,0.06);
+    --shadow-lg: 0 8px 32px rgba(0,0,0,0.10);
+    --radius: 12px;
+    --radius-sm: 8px;
+  }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding-bottom: 60px;
+  }
+
+  /* ── TOP NAV ── */
+  .topbar {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 24px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .topbar-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .topbar-logo {
+    width: 32px;
+    height: 32px;
+    background: var(--accent);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+  }
+  .topbar-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 17px;
+    color: var(--text);
+    letter-spacing: -0.3px;
+  }
+  .topbar-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .conn-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: #ccc;
+    transition: background 0.3s;
+  }
+  .conn-dot.live { background: var(--green); }
+  .conn-label {
+    font-size: 12px;
+    color: var(--text-3);
+  }
+
+  /* ── MAIN LAYOUT ── */
+  .main { max-width: 960px; margin: 0 auto; padding: 28px 20px; }
+
+  /* ── ALERT ── */
+  .alert {
+    background: var(--amber-light);
+    border: 1px solid #E8C87A;
+    border-radius: var(--radius-sm);
+    padding: 12px 16px;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 24px;
+    font-size: 13px;
+    color: var(--amber);
+    line-height: 1.5;
+  }
+  .alert-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+
+  /* ── SUMMARY ── */
+  .summary { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 28px; }
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px 18px;
+    box-shadow: var(--shadow);
+  }
+  .stat-label { font-size: 11px; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px; }
+  .stat-num { font-size: 28px; font-weight: 600; color: var(--text); line-height: 1; }
+  .stat-num.c-green { color: var(--green); }
+  .stat-num.c-amber { color: var(--amber); }
+
+  /* ── OVERALL PROGRESS BAR ── */
+  .overall-bar-wrap { margin-bottom: 28px; }
+  .overall-bar-label { font-size: 13px; color: var(--text-2); margin-bottom: 8px; display: flex; justify-content: space-between; }
+  .overall-bar-track { height: 6px; background: var(--surface2); border-radius: 3px; overflow: hidden; }
+  .overall-bar-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--green)); border-radius: 3px; transition: width 0.4s ease; }
+
+  /* ── DEPT CARDS ── */
+  .depts { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+  .dept-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    transition: box-shadow 0.2s;
+  }
+  .dept-card:hover { box-shadow: var(--shadow-lg); }
+
+  .dept-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 16px;
+    cursor: pointer;
+    border-bottom: 1px solid var(--border);
+    gap: 10px;
+    user-select: none;
+  }
+  .dept-head-left { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; }
+  .dept-icon-box {
+    width: 36px; height: 36px;
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 17px;
+    flex-shrink: 0;
+  }
+  .dept-info { min-width: 0; }
+  .dept-name { font-size: 13px; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .dept-owner { font-size: 11px; color: var(--text-3); margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .dept-head-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+  .dept-pct { font-size: 12px; font-weight: 600; min-width: 34px; text-align: right; }
+  .mini-bar { width: 50px; height: 4px; background: var(--surface2); border-radius: 2px; overflow: hidden; }
+  .mini-fill { height: 100%; border-radius: 2px; transition: width 0.3s; }
+  .chevron { font-size: 13px; color: var(--text-3); transition: transform 0.2s; display: inline-block; }
+  .chevron.open { transform: rotate(180deg); }
+
+  /* ── TASK LIST ── */
+  .task-list { padding: 4px 0; }
+  .task-list.hidden { display: none; }
+
+  .task-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 9px 16px;
+    cursor: pointer;
+    transition: background 0.15s;
+    position: relative;
+  }
+  .task-row:hover { background: var(--surface2); }
+  .task-row:last-child { border-bottom: none; }
+
+  .check-box {
+    width: 17px; height: 17px;
+    border: 1.5px solid var(--border-strong);
+    border-radius: 5px;
+    flex-shrink: 0;
+    margin-top: 2px;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.15s;
+    background: white;
+  }
+  .check-box.done { background: var(--green); border-color: var(--green); }
+  .check-box.done::after {
+    content: '';
+    display: block;
+    width: 9px; height: 5px;
+    border-left: 2px solid white;
+    border-bottom: 2px solid white;
+    transform: rotate(-45deg) translateY(-1px);
+  }
+
+  .task-label {
+    font-size: 13px;
+    color: var(--text);
+    line-height: 1.5;
+    flex: 1;
+    transition: color 0.15s;
+  }
+  .task-label.done { color: var(--text-3); text-decoration: line-through; }
+
+  .task-who {
+    font-size: 10px;
+    color: var(--text-3);
+    margin-top: 1px;
+    font-style: italic;
+  }
+
+  .task-del {
+    opacity: 0;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--text-3);
+    font-size: 14px;
+    padding: 2px 4px;
+    border-radius: 4px;
+    transition: opacity 0.15s, background 0.15s, color 0.15s;
+    flex-shrink: 0;
+    margin-top: 1px;
+    line-height: 1;
+  }
+  .task-row:hover .task-del { opacity: 1; }
+  .task-del:hover { background: var(--red-light); color: var(--red); }
+
+  /* ── ADD TASK ── */
+  .add-task-area {
+    padding: 10px 16px 12px;
+    border-top: 1px dashed var(--border);
+  }
+  .add-task-form {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+  }
+  .add-task-input {
+    flex: 1;
+    border: 1px solid var(--border);
+    background: var(--surface2);
+    border-radius: var(--radius-sm);
+    padding: 7px 10px;
+    font-size: 12.5px;
+    font-family: 'DM Sans', sans-serif;
+    color: var(--text);
+    outline: none;
+    transition: border 0.15s, background 0.15s;
+  }
+  .add-task-input:focus { border-color: var(--accent); background: white; }
+  .add-task-input::placeholder { color: var(--text-3); }
+  .add-btn {
+    background: var(--accent);
+    color: white;
+    border: none;
+    border-radius: var(--radius-sm);
+    width: 30px; height: 30px;
+    font-size: 18px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    transition: background 0.15s, transform 0.1s;
+    line-height: 1;
+  }
+  .add-btn:hover { background: var(--accent-dark); }
+  .add-btn:active { transform: scale(0.95); }
+
+  /* ── NAME MODAL ── */
+  .overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.45);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 999;
+  }
+  .modal {
+    background: white;
+    border-radius: 16px;
+    padding: 32px;
+    width: 340px;
+    box-shadow: var(--shadow-lg);
+    text-align: center;
+  }
+  .modal-emoji { font-size: 36px; margin-bottom: 12px; }
+  .modal-title { font-family: 'Playfair Display', serif; font-size: 20px; color: var(--text); margin-bottom: 6px; }
+  .modal-sub { font-size: 13px; color: var(--text-2); margin-bottom: 20px; line-height: 1.5; }
+  .modal-input {
+    width: 100%;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 10px 14px;
+    font-size: 14px;
+    font-family: 'DM Sans', sans-serif;
+    color: var(--text);
+    outline: none;
+    text-align: center;
+    margin-bottom: 14px;
+    transition: border 0.15s;
+  }
+  .modal-input:focus { border-color: var(--accent); }
+  .modal-btn {
+    width: 100%;
+    background: var(--accent);
+    color: white;
+    border: none;
+    border-radius: var(--radius-sm);
+    padding: 11px;
+    font-size: 14px;
+    font-weight: 600;
+    font-family: 'DM Sans', sans-serif;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .modal-btn:hover { background: var(--accent-dark); }
+
+  /* ── ACTIVITY LOG ── */
+  .activity-section { margin-top: 28px; }
+  .activity-title { font-size: 13px; font-weight: 600; color: var(--text-2); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 12px; }
+  .activity-list { display: flex; flex-direction: column; gap: 6px; }
+  .activity-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 10px 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 12.5px;
+  }
+  .activity-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .activity-dot.tick { background: var(--green); }
+  .activity-dot.untick { background: var(--text-3); }
+  .activity-dot.add { background: var(--accent); }
+  .activity-dot.del { background: var(--red); }
+  .activity-msg { color: var(--text-2); flex: 1; }
+  .activity-time { color: var(--text-3); font-size: 11px; flex-shrink: 0; }
+
+  /* ── LOADING ── */
+  .loading-overlay {
+    position: fixed; inset: 0;
+    background: var(--bg);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 9999;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .loading-logo { font-size: 40px; }
+  .loading-text { font-family: 'Playfair Display', serif; font-size: 18px; color: var(--text); }
+  .loading-sub { font-size: 13px; color: var(--text-3); }
+  .spinner {
+    width: 24px; height: 24px;
+    border: 2.5px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 640px) {
+    .summary { grid-template-columns: repeat(2, 1fr); }
+    .depts { grid-template-columns: 1fr; }
+    .topbar-title { font-size: 14px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Loading screen -->
+<div class="loading-overlay" id="loading">
+  <div class="loading-logo">🌙</div>
+  <div class="loading-text">Halal Event Tracker</div>
+  <div class="loading-sub">Connecting to live database…</div>
+  <div class="spinner"></div>
+</div>
+
+<!-- Name modal -->
+<div class="overlay" id="name-modal" style="display:none;">
+  <div class="modal">
+    <div class="modal-emoji">👋</div>
+    <div class="modal-title">Who are you?</div>
+    <div class="modal-sub">Enter your name so teammates know who ticked or added tasks.</div>
+    <input class="modal-input" id="name-input" placeholder="e.g. Daphne" maxlength="30" />
+    <button class="modal-btn" id="name-confirm">Let's go →</button>
+  </div>
+</div>
+
+<!-- Top nav -->
+<div class="topbar">
+  <div class="topbar-brand">
+    <div class="topbar-logo">🌙</div>
+    <div class="topbar-title">Halal Event Tracker</div>
+  </div>
+  <div class="topbar-right">
+    <div class="conn-dot" id="conn-dot"></div>
+    <div class="conn-label" id="conn-label">Connecting…</div>
+    <div style="font-size:12px; color:var(--text-2); background:var(--surface2); padding:4px 10px; border-radius:20px; border:1px solid var(--border);" id="user-badge">—</div>
+  </div>
+</div>
+
+<div class="main" id="main-content" style="display:none;">
+
+  <!-- Alert -->
+  <div class="alert">
+    <span class="alert-icon">⚠️</span>
+    <span><strong>Deadline:</strong> YeeYin to finalize KOL food menu before Friday 29 May — so Syed can prepare ingredients in advance.</span>
+  </div>
+
+  <!-- Summary -->
+  <div class="summary">
+    <div class="stat-card"><div class="stat-label">Total tasks</div><div class="stat-num" id="s-total">—</div></div>
+    <div class="stat-card"><div class="stat-label">Completed</div><div class="stat-num c-green" id="s-done">—</div></div>
+    <div class="stat-card"><div class="stat-label">Remaining</div><div class="stat-num c-amber" id="s-rem">—</div></div>
+    <div class="stat-card"><div class="stat-label">Overall</div><div class="stat-num" id="s-pct">—</div></div>
+  </div>
+
+  <!-- Overall progress bar -->
+  <div class="overall-bar-wrap">
+    <div class="overall-bar-label"><span>Overall progress</span><span id="bar-pct-label">0%</span></div>
+    <div class="overall-bar-track"><div class="overall-bar-fill" id="overall-fill" style="width:0%"></div></div>
+  </div>
+
+  <!-- Dept cards -->
+  <div class="depts" id="depts-container"></div>
+
+  <!-- Activity log -->
+  <div class="activity-section">
+    <div class="activity-title">Recent activity</div>
+    <div class="activity-list" id="activity-list"><div style="font-size:13px; color:var(--text-3);">No activity yet.</div></div>
+  </div>
+
+</div>
+
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+<script>
+// ─────────────────────────────────────────────────────────────
+// FIREBASE CONFIG
+// Replace with your own Firebase project config if you wish.
+// To get one: https://console.firebase.google.com
+// Create project → Realtime Database → copy config below.
+// ─────────────────────────────────────────────────────────────
+const firebaseConfig = {
+  apiKey: "AIzaSyCbp-ufHs8wtJVhIapXxLBSmMeQP0Mdxm0",
+  authDomain: "halal-event-tracker.firebaseapp.com",
+  databaseURL: "https://halal-event-tracker-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "halal-event-tracker",
+  storageBucket: "halal-event-tracker.firebasestorage.app",
+  messagingSenderId: "946453826679",
+  appId: "1:946453826679:web:8ac7de7ea2e0cf2d7a0a72",
+  measurementId: "G-LZ2MD5LGQF"
+};
+
+// ─────────────────────────────────────────────────────────────
+// DEPARTMENT DEFINITIONS
+// ─────────────────────────────────────────────────────────────
+const DEPTS = [
+  {
+    id: 'logistics',
+    name: 'Event Setup & Logistics',
+    owner: 'Daphne',
+    icon: '🏗️',
+    color: '#E3EEF8',
+    accent: '#2E6B9E',
+    tasks: [
+      'Stage & backdrop (Halal + MBOR branding)',
+      'Sound system — mic ×3, speakers',
+      'Registration table setup',
+      'Queue flow & crowd control barriers',
+      'Photographer + videographer engagement',
+      'Emcees confirmed'
+    ]
+  },
+  {
+    id: 'mbor',
+    name: 'MBOR Ceremony',
+    owner: 'Shukri',
+    icon: '🏅',
+    color: '#EDEAF8',
+    accent: '#6B5BA0',
+    tasks: [
+      'Confirm MBOR attendance & timing',
+      'Certificate prepared (same as FIM cert)',
+      'Photo + media coordination arranged',
+      'On-stage flow briefed (positions, handover)'
+    ]
+  },
+  {
+    id: 'operations',
+    name: 'Product & Operations',
+    owner: 'Syed',
+    icon: '🍕',
+    color: '#FAECE7',
+    accent: '#B84040',
+    tasks: [
+      'KJ Pizza making station set up (table, ingredients)',
+      'Hygiene setup — gloves, caps, wipes',
+      'Sufficient pizza ingredients & stock',
+      'Staff manpower ready for 150–200 pax peak',
+      'KOL food menu confirmed (pending YeeYin by 29/5)'
+    ]
+  },
+  {
+    id: 'marketing',
+    name: 'Marketing & Crowd Pull',
+    owner: 'Najla, Fatum, Jing Ru, Valerie',
+    icon: '📣',
+    color: '#E2F0EA',
+    accent: '#3D7A5E',
+    tasks: [
+      '100 KOL attendance confirmed',
+      'Social media posting plan (before / during / after)',
+      'Event poster & messaging finalised'
+    ]
+  },
+  {
+    id: 'merch',
+    name: 'Merchandise',
+    owner: 'Steffany',
+    icon: '🎁',
+    color: '#F5E8EF',
+    accent: '#A04870',
+    tasks: [
+      '170 VIP door gifts packed',
+      'Durian keychains ready',
+      'Mirrors ready & prepared ★ priority',
+      'LV bag(s) ready (if confirmed)',
+      'Tumblers ready (if confirmed)',
+      '20 beach flags (5m, US Pizza logo) ordered & delivered'
+    ]
+  },
+  {
+    id: 'visuals',
+    name: 'Invitation & Visuals',
+    owner: 'Awfa & Gui Xing',
+    icon: '🎨',
+    color: '#E2F2EF',
+    accent: '#2E8A7A',
+    tasks: [
+      'Official invitation cards (sponsors, VIPs)',
+      'Event poster for social media & outreach',
+      'On-ground visuals (backdrop, standees, signage)',
+      'Digital assets — IG stories, posts, KOL materials'
+    ]
+  },
+  {
+    id: 'vip',
+    name: 'VIP & Guest Handling',
+    owner: 'Daphne & Yee Yin',
+    icon: '🌟',
+    color: '#FBF0DC',
+    accent: '#B07830',
+    tasks: [
+      'Guest list finalised (KJ, MBOR, sponsors)',
+      'Holding / waiting area arranged',
+      'Parking & arrival coordination sorted'
+    ]
+  }
+];
+
+// ─────────────────────────────────────────────────────────────
+// MAIN APP
+// ─────────────────────────────────────────────────────────────
+let app, db, tasksRef, activityRef;
+let currentUser = localStorage.getItem('halal_tracker_user') || '';
+let dbTasks = {}; // { deptId: { taskKey: { label, done, addedBy, doneBy } } }
+let openDepts = {};
+let activities = [];
+let useLocalMode = false;
+
+DEPTS.forEach(d => { openDepts[d.id] = true; });
+
+function initFirebase() {
+  try {
+    // Check if placeholder config
+    if (firebaseConfig.apiKey === 'AIzaSyDemo_ReplaceWithYourKey') {
+      console.log('Demo mode: using localStorage instead of Firebase');
+      startLocalMode();
+      return;
+    }
+    app = firebase.initializeApp(firebaseConfig);
+    db = firebase.database();
+    tasksRef = db.ref('halal_event/tasks');
+    activityRef = db.ref('halal_event/activity');
+    setupListeners();
+    setConnectionStatus(true);
+  } catch(e) {
+    startLocalMode();
+  }
+}
+
+function startLocalMode() {
+  useLocalMode = true;
+  // Load from localStorage
+  const saved = localStorage.getItem('halal_event_tasks');
+  if (saved) {
+    dbTasks = JSON.parse(saved);
+  } else {
+    // Seed default tasks
+    DEPTS.forEach(d => {
+      dbTasks[d.id] = {};
+      d.tasks.forEach((t, i) => {
+        const key = 'task_' + i;
+        dbTasks[d.id][key] = { label: t, done: false, addedBy: 'System', doneBy: '' };
+      });
+    });
+    saveLocal();
+  }
+  const savedActivity = localStorage.getItem('halal_event_activity');
+  if (savedActivity) activities = JSON.parse(savedActivity);
+  setConnectionStatus(false);
+  hideLoading();
+  renderAll();
+}
+
+function saveLocal() {
+  localStorage.setItem('halal_event_tasks', JSON.stringify(dbTasks));
+  localStorage.setItem('halal_event_activity', JSON.stringify(activities.slice(0, 50)));
+}
+
+function setConnectionStatus(live) {
+  const dot = document.getElementById('conn-dot');
+  const label = document.getElementById('conn-label');
+  if (live) {
+    dot.classList.add('live');
+    label.textContent = 'Live';
+  } else {
+    dot.classList.remove('live');
+    label.textContent = useLocalMode ? 'Local mode' : 'Offline';
+  }
+}
+
+function setupListeners() {
+  // Seed default tasks if empty
+  tasksRef.once('value', snap => {
+    if (!snap.exists()) {
+      const seed = {};
+      DEPTS.forEach(d => {
+        seed[d.id] = {};
+        d.tasks.forEach((t, i) => {
+          seed[d.id]['task_' + i] = { label: t, done: false, addedBy: 'System', doneBy: '' };
+        });
+      });
+      tasksRef.set(seed);
+    }
+    hideLoading();
+  });
+
+  tasksRef.on('value', snap => {
+    dbTasks = snap.val() || {};
+    renderAll();
+  });
+
+  activityRef.limitToLast(20).on('value', snap => {
+    activities = [];
+    snap.forEach(child => { activities.push(child.val()); });
+    activities.reverse();
+    renderActivity();
+  });
+
+  // Connection status
+  db.ref('.info/connected').on('value', snap => {
+    setConnectionStatus(snap.val() === true);
+  });
+}
+
+function hideLoading() {
+  document.getElementById('loading').style.display = 'none';
+  document.getElementById('main-content').style.display = 'block';
+}
+
+// ─────────────────────────────────────────────────────────────
+// RENDER
+// ─────────────────────────────────────────────────────────────
+function renderAll() {
+  renderSummary();
+  renderDepts();
+  if (useLocalMode) renderActivity();
+}
+
+function getTasksForDept(deptId) {
+  return dbTasks[deptId] || {};
+}
+
+function getDeptStats(deptId) {
+  const tasks = getTasksForDept(deptId);
+  const keys = Object.keys(tasks);
+  const total = keys.length;
+  const done = keys.filter(k => tasks[k].done).length;
+  return { total, done, pct: total ? Math.round((done / total) * 100) : 0 };
+}
+
+function renderSummary() {
+  let total = 0, done = 0;
+  DEPTS.forEach(d => { const s = getDeptStats(d.id); total += s.total; done += s.done; });
+  const pct = total ? Math.round((done / total) * 100) : 0;
+  document.getElementById('s-total').textContent = total;
+  document.getElementById('s-done').textContent = done;
+  document.getElementById('s-rem').textContent = total - done;
+  document.getElementById('s-pct').textContent = pct + '%';
+  document.getElementById('overall-fill').style.width = pct + '%';
+  document.getElementById('bar-pct-label').textContent = pct + '%';
+}
+
+function renderDepts() {
+  const container = document.getElementById('depts-container');
+  // Check which depts are already rendered (update vs full re-render)
+  container.innerHTML = '';
+  DEPTS.forEach(d => {
+    container.appendChild(buildDeptCard(d));
+  });
+}
+
+function buildDeptCard(d) {
+  const tasks = getTasksForDept(d.id);
+  const keys = Object.keys(tasks);
+  const { total, done, pct } = getDeptStats(d.id);
+  const open = openDepts[d.id] !== false;
+
+  const card = document.createElement('div');
+  card.className = 'dept-card';
+  card.id = 'dept-' + d.id;
+
+  // Header
+  const head = document.createElement('div');
+  head.className = 'dept-head';
+  head.innerHTML = `
+    <div class="dept-head-left">
+      <div class="dept-icon-box" style="background:${d.color};">${d.icon}</div>
+      <div class="dept-info">
+        <div class="dept-name">${d.name}</div>
+        <div class="dept-owner">${d.owner}</div>
+      </div>
+    </div>
+    <div class="dept-head-right">
+      <div class="mini-bar"><div class="mini-fill" style="width:${pct}%; background:${pct===100?'#3D7A5E':d.accent};"></div></div>
+      <div class="dept-pct" style="color:${pct===100?'#3D7A5E':d.accent};">${pct}%</div>
+      <span class="chevron ${open?'open':''}">▾</span>
+    </div>
+  `;
+  head.addEventListener('click', () => {
+    openDepts[d.id] = !openDepts[d.id];
+    taskList.classList.toggle('hidden', !openDepts[d.id]);
+    head.querySelector('.chevron').classList.toggle('open', openDepts[d.id]);
+  });
+  card.appendChild(head);
+
+  // Task list
+  const taskList = document.createElement('div');
+  taskList.className = 'task-list' + (open ? '' : ' hidden');
+
+  keys.forEach(key => {
+    const task = tasks[key];
+    const row = document.createElement('div');
+    row.className = 'task-row';
+    row.innerHTML = `
+      <div class="check-box ${task.done ? 'done' : ''}"></div>
+      <div style="flex:1; min-width:0;">
+        <div class="task-label ${task.done ? 'done' : ''}">${escapeHtml(task.label)}</div>
+        ${task.doneBy ? `<div class="task-who">✓ ${escapeHtml(task.doneBy)}</div>` : (task.addedBy && task.addedBy !== 'System' ? `<div class="task-who">Added by ${escapeHtml(task.addedBy)}</div>` : '')}
+      </div>
+      <button class="task-del" title="Delete task" aria-label="Delete task">✕</button>
+    `;
+    // Tick
+    row.querySelector('.check-box').addEventListener('click', (e) => {
+      e.stopPropagation();
+      toggleTask(d.id, key, task);
+    });
+    row.querySelector('.task-label').addEventListener('click', () => toggleTask(d.id, key, task));
+    // Delete
+    row.querySelector('.task-del').addEventListener('click', (e) => {
+      e.stopPropagation();
+      deleteTask(d.id, key, task.label);
+    });
+    taskList.appendChild(row);
+  });
+
+  // Add task area
+  const addArea = document.createElement('div');
+  addArea.className = 'add-task-area';
+  addArea.innerHTML = `
+    <div class="add-task-form">
+      <input class="add-task-input" placeholder="Add a task…" maxlength="120" />
+      <button class="add-btn" title="Add task" aria-label="Add task">+</button>
+    </div>
+  `;
+  const inp = addArea.querySelector('.add-task-input');
+  const btn = addArea.querySelector('.add-btn');
+  const doAdd = () => {
+    const val = inp.value.trim();
+    if (!val) return;
+    addTask(d.id, val);
+    inp.value = '';
+    inp.focus();
+  };
+  btn.addEventListener('click', doAdd);
+  inp.addEventListener('keydown', e => { if (e.key === 'Enter') doAdd(); });
+
+  taskList.appendChild(addArea);
+  card.appendChild(taskList);
+  return card;
+}
+
+function escapeHtml(str) {
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ─────────────────────────────────────────────────────────────
+// ACTIONS
+// ─────────────────────────────────────────────────────────────
+function toggleTask(deptId, key, task) {
+  const newDone = !task.done;
+  const doneBy = newDone ? currentUser : '';
+
+  if (useLocalMode) {
+    if (!dbTasks[deptId]) dbTasks[deptId] = {};
+    dbTasks[deptId][key].done = newDone;
+    dbTasks[deptId][key].doneBy = doneBy;
+    logActivity(newDone ? 'tick' : 'untick', `${currentUser || 'Someone'} ${newDone ? 'completed' : 'unchecked'} "${task.label}" in ${getDeptName(deptId)}`);
+    saveLocal();
+    renderAll();
+  } else {
+    tasksRef.child(deptId).child(key).update({ done: newDone, doneBy });
+    logActivity(newDone ? 'tick' : 'untick', `${currentUser || 'Someone'} ${newDone ? 'completed' : 'unchecked'} "${task.label}" in ${getDeptName(deptId)}`);
+  }
+}
+
+function addTask(deptId, label) {
+  const newTask = { label, done: false, addedBy: currentUser || 'Someone', doneBy: '' };
+  if (useLocalMode) {
+    if (!dbTasks[deptId]) dbTasks[deptId] = {};
+    const key = 'task_' + Date.now();
+    dbTasks[deptId][key] = newTask;
+    logActivity('add', `${currentUser || 'Someone'} added "${label}" to ${getDeptName(deptId)}`);
+    saveLocal();
+    renderAll();
+  } else {
+    tasksRef.child(deptId).push(newTask);
+    logActivity('add', `${currentUser || 'Someone'} added "${label}" to ${getDeptName(deptId)}`);
+  }
+}
+
+function deleteTask(deptId, key, label) {
+  if (!confirm(`Delete task "${label}"?`)) return;
+  if (useLocalMode) {
+    delete dbTasks[deptId][key];
+    logActivity('del', `${currentUser || 'Someone'} deleted "${label}" from ${getDeptName(deptId)}`);
+    saveLocal();
+    renderAll();
+  } else {
+    tasksRef.child(deptId).child(key).remove();
+    logActivity('del', `${currentUser || 'Someone'} deleted "${label}" from ${getDeptName(deptId)}`);
+  }
+}
+
+function getDeptName(id) {
+  const d = DEPTS.find(x => x.id === id);
+  return d ? d.name : id;
+}
+
+function logActivity(type, msg) {
+  const entry = { type, msg, time: Date.now() };
+  if (useLocalMode) {
+    activities.unshift(entry);
+    if (activities.length > 50) activities.pop();
+    renderActivity();
+    return;
+  }
+  activityRef.push(entry);
+  // trim old entries
+  activityRef.once('value', snap => {
+    const count = snap.numChildren();
+    if (count > 50) {
+      let i = 0;
+      snap.forEach(child => {
+        if (i++ < count - 50) child.ref.remove();
+      });
+    }
+  });
+}
+
+function renderActivity() {
+  const el = document.getElementById('activity-list');
+  if (!activities.length) {
+    el.innerHTML = '<div style="font-size:13px; color:var(--text-3);">No activity yet.</div>';
+    return;
+  }
+  el.innerHTML = activities.slice(0, 10).map(a => {
+    const t = formatTime(a.time);
+    const dotClass = a.type === 'tick' ? 'tick' : a.type === 'untick' ? 'untick' : a.type === 'add' ? 'add' : 'del';
+    return `<div class="activity-item">
+      <div class="activity-dot ${dotClass}"></div>
+      <div class="activity-msg">${escapeHtml(a.msg)}</div>
+      <div class="activity-time">${t}</div>
+    </div>`;
+  }).join('');
+}
+
+function formatTime(ts) {
+  if (!ts) return '';
+  const d = new Date(ts);
+  const now = new Date();
+  const diff = now - d;
+  if (diff < 60000) return 'just now';
+  if (diff < 3600000) return Math.floor(diff / 60000) + 'm ago';
+  if (diff < 86400000) return Math.floor(diff / 3600000) + 'h ago';
+  return d.toLocaleDateString();
+}
+
+// ─────────────────────────────────────────────────────────────
+// USER NAME
+// ─────────────────────────────────────────────────────────────
+function showNameModal() {
+  document.getElementById('name-modal').style.display = 'flex';
+  setTimeout(() => document.getElementById('name-input').focus(), 100);
+}
+
+function setUser(name) {
+  currentUser = name.trim() || 'Anonymous';
+  localStorage.setItem('halal_tracker_user', currentUser);
+  document.getElementById('user-badge').textContent = '👤 ' + currentUser;
+  document.getElementById('name-modal').style.display = 'none';
+}
+
+document.getElementById('name-confirm').addEventListener('click', () => {
+  setUser(document.getElementById('name-input').value);
+});
+document.getElementById('name-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') setUser(e.target.value);
+});
+
+// ─────────────────────────────────────────────────────────────
+// BOOT
+// ─────────────────────────────────────────────────────────────
+if (!currentUser) {
+  // Show name modal after loading
+  document.getElementById('name-badge') && (document.getElementById('name-badge').textContent = '—');
+  initFirebase();
+  setTimeout(() => {
+    if (!currentUser) showNameModal();
+  }, 1200);
+} else {
+  document.getElementById('user-badge').textContent = '👤 ' + currentUser;
+  initFirebase();
+}
+
+// Allow changing name by clicking badge
+document.getElementById('user-badge').addEventListener('click', showNameModal);
+</script>
+</body>
+</html>
